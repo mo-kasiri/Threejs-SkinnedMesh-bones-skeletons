@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {GUI} from "three/examples/jsm/libs/dat.gui.module";
 import * as dat from 'lil-gui'
-import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js'
 
 /**
  * Base
@@ -61,18 +60,6 @@ scene.add(sphere, plane);
  */
 
 
-const axesHelper = new THREE.AxesHelper(10);
-//scene.add(axesHelper);
-
-// defining bones
-// const bones = [new THREE.Bone(), new THREE.Bone(), new THREE.Bone()];
-// bones[0].add(bones[1]);
-// bones[1].add(bones[2]);
-//
-// bones[0].position.y = -3;
-// bones[1].position.y =  0;
-// bones[2].position.y =  1;
-
 /**
  * Sizing
  * */
@@ -121,9 +108,6 @@ const geometry = new THREE.CylinderGeometry( 5, 5, sizing.height, 5, sizing.segm
 
 const position = geometry.attributes.position;
 
-// console.log("this is position ");
-// console.log(position);
-
 const vertex = new THREE.Vector3();
 
 const skinIndices = [];
@@ -134,30 +118,15 @@ for ( let i = 0; i < position.count; i ++ ) {
 	vertex.fromBufferAttribute( position, i );
 
 	//compute skinIndex and skinWeight based on some configuration data
-
-	//const y = ( vertex.y + sizing.halfHeight );
 	const y = ( vertex.y + sizing.halfHeight );
 
-	//const skinIndex = Math.floor( y / sizing.segmentHeight );
 	const skinIndex = Math.floor( y / sizing.segmentHeight );
-	//const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight;
 	const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight;
 
 	skinIndices.push( skinIndex, skinIndex + 1, 0, 0 );
 	skinWeights.push( 1 - skinWeight, skinWeight, 0, 0 );
 
 }
-console.log(skinIndices);
-
-// for( let i = 0; i<position.count; i++ )
-// {
-//     let k = THREE.Math.mapLinear( position.getY( i ), -2.5, 2.5, 1, 0 );
-//
-//     skinIndices.push( 0, 1, 0, 0 );
-//     skinWeights.push( k, 1-k, 0, 0 );
-// }
-
-console.log(skinIndices);
 
 geometry.setAttribute( 'skinIndex', new THREE.Uint16BufferAttribute( skinIndices, 4 ) );
 geometry.setAttribute( 'skinWeight', new THREE.Float32BufferAttribute( skinWeights, 4 ) );
