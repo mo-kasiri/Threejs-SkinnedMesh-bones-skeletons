@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import {GUI} from "three/examples/jsm/libs/dat.gui.module";
 import * as dat from 'lil-gui'
 import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js'
 
@@ -23,7 +24,7 @@ const scene = new THREE.Scene()
 const ambientLight = new THREE.AmbientLight()
 ambientLight.color = new THREE.Color(0xffffff)
 ambientLight.intensity = 0.5
-scene.add(ambientLight)
+scene.add(ambientLight);
 
 
 // Point light
@@ -36,7 +37,7 @@ scene.add(pointLight)
  * Objects
  */
 // Material
-const material = new THREE.MeshStandardMaterial()
+const material = new THREE.MeshStandardMaterial({wireframe: true, side: THREE.DoubleSide})
 material.roughness = 0.4;
 
 // Objects
@@ -61,28 +62,67 @@ scene.add(sphere, plane);
 
 
 const axesHelper = new THREE.AxesHelper(10);
-scene.add(axesHelper);
+//scene.add(axesHelper);
 
 // defining bones
-const bones = [new THREE.Bone(), new THREE.Bone()];
-bones[0].add(bones[1]);
-bones[0].position.y = -2.5;
-bones[1].position.y = 2.5;
+// const bones = [new THREE.Bone(), new THREE.Bone(), new THREE.Bone()];
+// bones[0].add(bones[1]);
+// bones[1].add(bones[2]);
+//
+// bones[0].position.y = -3;
+// bones[1].position.y =  0;
+// bones[2].position.y =  1;
+
+/**
+ * Sizing
+ * */
+const segmentHeight = 8;
+const segmentCount = 4;
+const height = segmentHeight * segmentCount;
+const halfHeight = height * 0.5;
+
+const sizing = {
+    segmentHeight: segmentHeight,
+    segmentCount: segmentCount,
+    height: height,
+    halfHeight: halfHeight
+};
+
+//   +----o----+ <- bone3       (y =  12)
+//   |         |
+//   |    o    | <- bone2       (y =   4)
+//   |         |
+//   |    o    | <- bone1       (y =  -4)
+//   |         |
+//   +----oo---+ <- root, bone0 (y = -12)
 
 
-const geometry = new THREE.CylinderGeometry( 1, 1, 5, 5, 15, 5, 30 );
 
-const geometry2 = new THREE.CylinderGeometry( 1, 1, 5, 5, 15, 5, 30 );
-const material2 = new THREE.MeshBasicMaterial({color: 'red'});
-const mesh2 = new THREE.Mesh(geometry2, material2);
+const bones = [];
+
+let prevBone = new THREE.Bone();
+bones.push(prevBone);
+prevBone.position.y = - sizing.halfHeight;
+
+for ( let i = 0; i < sizing.segmentCount; i ++ ) {
+
+    const bone = new THREE.Bone();
+    bone.position.y = sizing.segmentHeight;
+    bones.push( bone );
+    prevBone.add( bone );
+    prevBone = bone;
+
+}
+
+const geometry = new THREE.CylinderGeometry( 5, 5, sizing.height, 5, sizing.segmentCount * 3, true );
 
 //scene.add(mesh2);
 
 
 const position = geometry.attributes.position;
 
-console.log("this is position ");
-console.log(position);
+// console.log("this is position ");
+// console.log(position);
 
 const vertex = new THREE.Vector3();
 
@@ -96,17 +136,18 @@ for ( let i = 0; i < position.count; i ++ ) {
 	//compute skinIndex and skinWeight based on some configuration data
 
 	//const y = ( vertex.y + sizing.halfHeight );
-	const y = ( vertex.y + 2.5 );
+	const y = ( vertex.y + sizing.halfHeight );
 
 	//const skinIndex = Math.floor( y / sizing.segmentHeight );
-	const skinIndex = Math.floor( y / 5 );
+	const skinIndex = Math.floor( y / sizing.segmentHeight );
 	//const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight;
-	const skinWeight = ( y % 5 ) / 5;
+	const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight;
 
 	skinIndices.push( skinIndex, skinIndex + 1, 0, 0 );
 	skinWeights.push( 1 - skinWeight, skinWeight, 0, 0 );
 
 }
+console.log(skinIndices);
 
 // for( let i = 0; i<position.count; i++ )
 // {
@@ -131,16 +172,18 @@ const skeleton = new THREE.Skeleton( bones );
 const rootBone = skeleton.bones[ 0 ];
 mesh.add( rootBone );
 
+
 // bind the skeleton to the mesh
+mesh.bind( skeleton );
+
 const helper = new THREE.SkeletonHelper( mesh );
 scene.add( helper );
 
-
-mesh.bind( skeleton );
-
 scene.add(mesh);
 
+console.log(mesh);
 
+/****************************************************** End of Skeletons */
 
 /**
  * Sizes
@@ -200,9 +243,11 @@ const tick = () =>
 
     // Updating the skeleton
     skeleton.bones[ 0 ].rotation.x = THREE.Math.degToRad( 90*Math.cos(3*elapsedTime) );
-    skeleton.bones[ 1 ].rotation.x = THREE.Math.degToRad( 110*Math.sin(3*elapsedTime) );
+    skeleton.bones[ 1 ].rotation.x = THREE.Math.degToRad( 90*Math.cos(3*elapsedTime) );
+    skeleton.bones[ 2 ].rotation.x = THREE.Math.degToRad( 90*Math.cos(3*elapsedTime) );
+    skeleton.bones[ 3 ].rotation.x = THREE.Math.degToRad( 90*Math.cos(3*elapsedTime) );
 
-    //console.log(skeleton.bones[0]);
+    //console.log(skeleton.bones[2].rotation.x);
 
     // Update controls
     controls.update()
